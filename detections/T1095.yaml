@@ -1,0 +1,20 @@
+---
+# UNIX Sockets
+- metadata:
+    label: 'Non-Application Layer Protocol: UNIX Sockets'
+    description: 'Detect UNIX socket files through lsof'
+    techniques:
+      - T1095
+    tactics:
+      - TA0011
+    author: 'Red Hat Information Security'
+    version: '1'
+    date: '2024-04-20'
+  indicators:
+    - content
+  output: direct
+  detection:
+    type: 'shell'
+    executable: '/bin/bash'
+    script: |
+      2>/dev/null lsof -U

@@ -1,0 +1,15 @@
+---
+- name: Hunt | Indicators
+  ansible.builtin.include_tasks:
+    file: 'hunt.yml'
+  loop: "{{ than_indicators }}"
+  loop_control:
+    loop_var: _indicator
+    label: "{{ _indicator.metadata.label }}"
+  when:
+    - _indicator.type | intersect(_result_indicator_types) | length
+    - _indicator_subtechniques is undefined or (_indicator_subtechniques | intersect(_result_subtechniques) | length)
+    - _indicator_techniques is undefined or (_indicator_techniques | intersect(_result_techniques) | length)
+    - _indicator_tactics is undefined or (_indicator_tactics | intersect(_result_tactics) | length)
+
+...

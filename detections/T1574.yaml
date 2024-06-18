@@ -1,0 +1,27 @@
+---
+# ld.so.preload
+- metadata:
+    label: 'Hijack Execution Flow: Dynamic Linker Hijacking'
+    description: 'Detect /etc/ld.so.preload'
+    subtechniques:
+      - T1574.006
+    techniques:
+      - T1574
+    tactics:
+      - TA0003
+      - TA0004
+      - TA0005
+    author: 'Red Hat Information Security'
+    version: '1'
+    date: '2024-04-20'
+  indicators:
+    - content
+    - domain
+    - filename
+    - sha256
+    - ip
+  detection:
+    type: 'shell'
+    executable: '/bin/bash'
+    script: |
+      2>/dev/null 2>/dev/null find /etc -type f -name "ld.so.preload"

@@ -1,0 +1,24 @@
+---
+- name: Content | Gather from path
+  ansible.builtin.command:
+    cmd: >-
+      cat {{ item }}
+  loop: "{{ _detection_scan_results }}"
+  register: _detection_gather_type_content
+  changed_when: false
+
+- name: Content | Process from path
+  vars:
+    _output_path_key: "{{ item.item }}"
+    _output_path_value: "{{ item.stdout }}"
+    _output_path_processed: "{{ {_output_path_key: {'content': _output_path_value}} }}"
+    _output_content_key: "{{  }}"
+  ansible.builtin.set_fact:
+    _detection_gathered_results: "{{ _detection_gathered_results | d({})
+      | ansible.builtin.combine(_output_path_processed, recursive=true)
+      }}"
+  loop: "{{ _detection_gather_type_content.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+...

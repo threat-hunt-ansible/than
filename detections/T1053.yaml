@@ -1,0 +1,90 @@
+---
+# At
+- metadata:
+    label: 'Scheduled Task/Job: At'
+    description: 'Detect atjobs'
+    subtechniques:
+      - T1053.002
+    techniques:
+      - T1053
+    tactics:
+      - TA0002
+      - TA0003
+      - TA0004
+    author: 'Red Hat Information Security'
+    version: '1'
+    date: '2024-04-20'
+  indicators:
+    - filename
+    - content
+    - domain
+    - ip
+  detection:
+    type: 'shell'
+    executable: '/bin/bash'
+    script: |
+      2>/dev/null find /var/spool/at/ -type f
+
+
+# Cron
+- metadata:
+    label: 'Scheduled Task/Job: Cron'
+    description: 'Detect cron jobs'
+    subtechniques:
+      - T1053.003
+    techniques:
+      - T1053
+    tactics:
+      - TA0002
+      - TA0003
+      - TA0004
+    author: 'Red Hat Information Security'
+    version: '1'
+    date: '2024-04-20'
+  indicators:
+    - content
+    - domain
+    - filename
+    - ip
+  detection:
+    type: 'shell'
+    executable: '/bin/bash'
+    script: |
+      2>/dev/null find /etc -type f -name "cron*"
+      2>/dev/null find /etc -type f -name "anacron*"
+      2>/dev/null find /etc/cron.d/ -type f
+      2>/dev/null find /etc/cron.daily/ -type f
+      2>/dev/null find /etc/cron.hourly/ -type f
+      2>/dev/null find /etc/cron.monthly/ -type f
+      2>/dev/null find /etc/cron.weekly/ -type f
+      2>/dev/null find /var/spool/ -type f -path "/var/spool/cron/crontabs/*"
+      2>/dev/null find /var/spool/ -type f -path "/var/spool/cron/anacron/*"
+
+
+# Systemd timers
+- metadata:
+    label: 'Scheduled Task/Job: Systemd Timers'
+    description: 'Detect systemd timers'
+    subtechniques:
+      - T1053.006
+    techniques:
+      - T1053
+    tactics:
+      - TA0002
+      - TA0003
+      - TA0004
+    author: 'Red Hat Information Security'
+    version: '1'
+    date: '2024-04-20'
+  indicators:
+    - content
+    - domain
+    - filename
+    - ip
+  detection:
+    type: 'shell'
+    executable: '/bin/bash'
+    script: |
+      2>/dev/null find /etc/systemd/ -type f -name "*.timer"
+      2>/dev/null find /run/systemd/system/ -type f -name "*.timer"
+      2>/dev/null find /usr/lib/systemd/ -type f -name "*.timer"

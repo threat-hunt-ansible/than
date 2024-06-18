@@ -1,0 +1,10 @@
+---
+- name: Generate YAML
+  ansible.builtin.copy:
+    content: "{{ __content | to_nice_yaml }}"
+    dest: "{{ __dest }}/{{ _reports_onefile_filename }}.yaml"
+  delegate_to: localhost
+  run_once: yes
+  become: no
+
+...

@@ -1,0 +1,18 @@
+---
+# THAN Hosts Configuration
+
+# than_scan_tactics:
+#   - 'TA0004'
+
+# than_scan_techniques:
+#   - 'T1129'
+#   - 'T1070'
+#   - 'T1037'
+#   - 'T1053'
+
+# than_scan_subtechniques:
+#   - 'T1053.002'
+#   - 'T1037.004'
+
+# THAN can attempt to launch a shell with sanitized env
+# than_sanitize_shell: false

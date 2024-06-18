@@ -1,0 +1,26 @@
+---
+- name: SHA1 | Process indicator data
+  vars:
+    __indicator_result: "{{ _result.results | dict2items | selectattr('value.sha1', '==', item) }}"
+  ansible.builtin.set_fact:
+    _indicator_results: "{{ _indicator_results | d([]) + __indicator_result }}"
+  loop: "{{ [_indicator.indicator] | flatten }}"
+
+- name: SHA1 | Hunt
+  vars:
+    _gathered_key: "{{ item.key }}"
+    _gathered_value: "{{ item.value }}"
+    _gathered_combine: "{{ {'sha1': _gathered_key, 'artifacts': _gathered_value} }}"
+  ansible.builtin.set_fact:
+    _indicator_gathered_results: "{{ _indicator_gathered_results | d({})
+      | ansible.builtin.combine(_gathered_combine, recursive=true)
+      }}"
+  loop: "{{ _indicator_results }}"
+  loop_control:
+    label: "{{ item.key }}"
+
+- name: SHA1 | Drop indicator data
+  ansible.builtin.set_fact:
+    _indicator_results: []
+
+...

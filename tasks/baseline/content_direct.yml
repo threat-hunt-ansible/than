@@ -1,0 +1,10 @@
+---
+- name: Content | Process direct content
+  vars:
+    _output_path_processed: "{{ {_detection_label: {'content': _detection.stdout}} }}"
+  ansible.builtin.set_fact:
+    _detection_gathered_results: "{{ _detection_gathered_results | d({})
+      | ansible.builtin.combine(_output_path_processed, recursive=true)
+      }}"
+
+...

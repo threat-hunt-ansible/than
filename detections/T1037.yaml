@@ -1,0 +1,25 @@
+---
+# RC Scripts
+- metadata:
+    label: 'Boot or Logon Initialization Scripts: RC Scripts'
+    description: 'Detect RC scripts'
+    subtechniques:
+      - T1037.004
+    techniques:
+      - T1037
+    tactics:
+      - TA0003
+      - TA0004
+    author: 'Red Hat Information Security'
+    version: '1'
+    date: '2024-04-20'
+  indicators:
+    - content
+    - filename
+    - sha256
+  detection:
+    type: 'shell'
+    executable: '/bin/bash'
+    script: |
+      2>/dev/null find /etc/rc.d/ -type f
+      2>/dev/null find /etc -type f -name "rc.common"

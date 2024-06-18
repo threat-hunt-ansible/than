@@ -1,0 +1,23 @@
+---
+# THAN Scanner Configuration
+
+# Mode
+# Supported: ['baseline', 'hunt']
+than_mode: 'hunt'
+
+# Report format
+# Supported: ['yaml', 'json', 'xml', 'csv']
+than_report_format:
+  - 'json'
+  - 'yaml'
+
+# Report mode
+# Supported: ['directories', 'onefile']
+than_report_mode:
+  - 'directories'
+  - 'onefile'
+
+# Customize paths
+than_detections_dir_path: 'detections'
+than_indicators_dir_path: 'indicators'
+than_reports_dir_path: 'reports'

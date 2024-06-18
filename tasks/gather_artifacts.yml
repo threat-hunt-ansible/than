@@ -1,0 +1,19 @@
+---
+- name: "Detection | Artifacts"
+  ansible.builtin.include_tasks:
+    file: "tasks/baseline/{{ _type if (_type != 'content') else _type + '_' + _detection_output }}.yml"
+  loop: "{{ _detection_supported_types | intersect(than_indicator_types_gather) }}"
+  loop_control:
+    loop_var: '_type'
+
+- name: "Detection | Process Results"
+  ansible.builtin.set_fact:
+    than_host_detections_results: "{{ than_host_detections_results | d([])
+      + [{'host': inventory_hostname, 'metadata': _detection_metadata, 'indicators': _detection_supported_types, 'results': _detection_gathered_results}]
+      }}"
+
+- name: "Detection | Cleanup"
+  ansible.builtin.set_fact:
+    _detection_gathered_results: {}
+
+...

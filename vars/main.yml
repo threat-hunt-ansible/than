@@ -1,0 +1,32 @@
+---
+than_indicator_types_gather:
+  - 'content'
+  - 'sha256'
+
+_detection_label: "{{ _detection.item.metadata.label }}"
+_detection_output: "{{ _detection.item.output | d('path') }}"
+_detection_delimeter: "{{ _detection.item.delimeter }}"
+_detection_metadata: "{{ _detection.item.metadata }}"
+_detection_techniques: "{{ _detection.item.metadata.techniques }}"
+_detection_scan_results: "{{ (_detection.stdout | split(_detection_delimeter)) if _detection_delimeter is defined else _detection.stdout_lines }}"
+_detection_supported_types: "{{ _detection.item.indicators | d(['filename']) }}"
+
+_reports_host_directory: "{{ than_reports_dir_path }}/{{ _reports_timestamp }}_{{ than_mode }}/{{ inventory_hostname }}"
+_reports_onefile_filename: "{{ _reports_timestamp }}_{{ than_mode }}_report"
+_reports_host_directory_onefile: "{{ than_reports_dir_path }}/{{ _reports_timestamp }}_{{ than_mode }}"
+_first_ansible_host: "{{ ansible_play_hosts[0] }}"
+_reports_timestamp: "{{ hostvars[_first_ansible_host]['ansible_date_time']['iso8601_basic_short'] }}"
+
+_indicators_types: "{{ than_indicators }}"
+
+_indicator_label: "{{ _indicator.metadata.label }}"
+_indicator_indicator: "{{ _indicator.indicator }}"
+_indicator_metadata: "{{ _indicator.metadata }}"
+_indicator_subtechniques: "{{ _indicator.metadata.subtechniques }}"
+_indicator_techniques: "{{ _indicator.metadata.techniques }}"
+_indicator_tactics: "{{ _indicator.metadata.tactics }}"
+
+_result_subtechniques: "{{ _result.metadata.subtechniques | d([]) }}"
+_result_techniques: "{{ _result.metadata.techniques | d([]) }}"
+_result_tactics: "{{ _result.metadata.tactics | d([]) }}"
+_result_indicator_types: "{{ _result.indicators | d(['filename']) }}"

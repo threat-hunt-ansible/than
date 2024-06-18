@@ -1,0 +1,32 @@
+---
+- name: Report | Create host structure
+  ansible.builtin.file:
+    name: "{{ _reports_host_directory_onefile }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  run_once: yes
+  become: no
+
+- name: Report | Collect from hosts
+  vars:
+    _host_result: "{{ hostvars[item]['than_host_indicator_findings'] }}"
+  ansible.builtin.set_fact:
+    than_report: "{{ than_report | d([]) + _host_result }}"
+  loop: "{{ ansible_play_hosts }}"
+  delegate_to: localhost
+  run_once: yes
+  become: no
+
+- name: "Report | Generate"
+  ansible.builtin.include_tasks:
+    file: "report/generate_onefile_{{ _format }}.yml"
+    apply:
+      vars:
+        __content: "{{ than_report }}"
+        __dest: "{{ _reports_host_directory_onefile }}"
+  loop: "{{ [than_report_format] | flatten }}"
+  loop_control:
+    loop_var: '_format'
+
+...

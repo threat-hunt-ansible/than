@@ -1,0 +1,146 @@
+---
+# Threat Hunting with Ansible playbook
+- hosts: all
+  become: yes
+  gather_facts: yes
+  vars_files:
+    - options.yml
+    - vars/main.yml
+  vars:
+    _test: "{{ _dir_file_content[0]['metadata']['subtechniques'] | d([]) | intersect('than_scan_subtechniques') }}"
+    _dir_files: "{{ q('lines', 'ls ' + __dir) }}"
+    _dir_file_content: "{{ lookup('file', __dir + '/' + item) | from_yaml }}"
+  pre_tasks:
+    - name: THAN | Load Detections for TTPs
+      vars:
+        __dir: "{{ than_detections_dir_path }}"
+      ansible.builtin.set_fact:
+        than_detections: "{{ than_detections | d([])
+          + _dir_file_content
+          }}"
+      delegate_to: localhost
+      loop: "{{ _dir_files }}"
+  
+    - when:
+        - than_mode == 'hunt'
+      vars:
+        __dir: "{{ than_indicators_dir_path }}"
+      block:
+        # Check indicators are defined
+        - name: THAN | Check Defined Indicators
+          ansible.builtin.assert:
+            that:
+              - _dir_files | length
+            msg: >-
+              No indicators defined in "{{ than_indicators_dir_path }}". THAN is terminating.
+          delegate_to: localhost
+          run_once: yes
+
+        # Process indicators
+        - name: THAN | Load Indicators
+          ansible.builtin.set_fact:
+            than_indicators: "{{ than_indicators | d([])
+              + _dir_file_content
+              }}"
+          delegate_to: localhost
+          loop: "{{ _dir_files }}"
+
+  tasks:
+    # Detections execution
+    - name: Detections | Shell | Scan
+      vars:
+        _indicators_subtechniques: "{{ than_indicators | selectattr('metadata.subtechniques', 'defined') | map(attribute='metadata') | map(attribute='subtechniques') | flatten | unique }}"
+        _indicators_techniques: "{{ than_indicators | selectattr('metadata.techniques', 'defined') | map(attribute='metadata') | map(attribute='techniques') | flatten | unique }}"
+        _indicators_tactics: "{{ than_indicators | selectattr('metadata.tactics', 'defined') | map(attribute='metadata') | map(attribute='tactics') | flatten | unique }}"
+        _indicators_ttps: "{{ _indicators_subtechniques + _indicators_techniques + _indicators_tactics }}"
+        _detection_ttps: "{{ (item.metadata.subtechniques | d([])) + (item.metadata.techniques | d([])) + (item.metadata.tactics | d([])) }}"
+        _sanitized_shell: |
+          H=1 LD_DEBUG="" LD_PRELOAD="" {{ item.detection.executable }} -c '{{ item.detection.script }}'
+        __shell_cmd: "{{ _sanitized_shell if (than_sanitize_shell | bool) else item.detection.script }}"
+      ansible.builtin.shell:
+        executable: "{{ item.detection.executable }}"
+        cmd: |
+          {{ __shell_cmd }}
+      loop: "{{ than_detections | selectattr('detection.type', '==', 'shell') }}"
+      loop_control:
+        label: "{{ item.metadata.label }}"
+      register: than_shell_detections_scan
+      changed_when: false
+      when:
+        - than_scan_tactics is undefined or (than_scan_tactics | intersect(item.metadata.tactics | d([])) | length)
+        - than_scan_techniques is undefined or (than_scan_techniques | intersect(item.metadata.techniques | d([])) | length)
+        - than_scan_subtechniques is undefined or (than_scan_subtechniques | intersect(item.metadata.subtechniques | d([])) | length)
+        - than_mode == 'baseline' or (than_mode == 'hunt' and (_detection_ttps | intersect(_indicators_ttps) | length))
+
+    - ansible.builtin.assert:
+        that:
+          - than_shell_detections_scan is not skipped
+        msg: >-
+          No detections executed. THAN is terminating.
+
+
+    # Artifact Collection
+    - name: Detections | Gather
+      ansible.builtin.include_tasks:
+        file: 'tasks/gather_artifacts.yml'
+      loop: "{{ than_shell_detections_scan.results | rejectattr('skipped', 'defined') }}"
+      loop_control:
+        loop_var: '_detection'
+      no_log: true
+
+
+    # Indicator Hunt
+    - name: Detections | Hunt
+      ansible.builtin.include_tasks:
+        file: 'tasks/hunt_indicators.yml'
+      loop: "{{ than_host_detections_results }}"
+      loop_control:
+        loop_var: '_result'
+      no_log: true
+      when:
+        - than_mode == 'hunt'
+
+
+    # Report
+    - block:
+        - name: THAN | Ensure reports directory exists
+          ansible.builtin.stat:
+            path: "{{ than_reports_dir_path }}"
+          register: _report_dir_stat
+          failed_when:
+            - not _report_dir_stat.stat.exists
+          delegate_to: localhost
+          run_once: yes
+          become: no
+      rescue:
+        - name: THAN | Attempt to create reports directory
+          ansible.builtin.file:
+            name: "{{ than_reports_dir_path }}"
+            state: directory
+            mode: '0755'
+          delegate_to: localhost
+          run_once: yes
+          become: no
+
+    - name: Reports | Generate Baseline
+      ansible.builtin.include_tasks:
+        file: "tasks/report_baseline_{{ _mode }}.yml"
+      loop: "{{ [than_report_mode] | flatten }}"
+      loop_control:
+        loop_var: '_mode'
+      when:
+        - than_mode == 'baseline'
+
+    - name: Reports | Generate Indicators
+      ansible.builtin.include_tasks:
+        file: "tasks/report_hunt_{{ _mode }}.yml"
+      loop: "{{ [than_report_mode] | flatten }}"
+      loop_control:
+        loop_var: '_mode'
+      when:
+        - than_mode == 'hunt'
+        - than_host_indicator_findings is defined
+        - than_host_indicator_findings | length
+
+
+...

@@ -1,0 +1,22 @@
+---
+# Running processes
+- metadata:
+    label: 'Masquerading: Legitimate Process'
+    description: 'Gather processes for masquerade detection'
+    subtechniques:
+      - T1036.005
+    techniques:
+      - T1036
+    tactics:
+      - TA0005
+    author: 'Red Hat Information Security'
+    version: '1'
+    date: '2024-04-20'
+  indicators:
+    - content
+  output: direct
+  detection:
+    type: 'shell'
+    executable: '/bin/bash'
+    script: |
+      2>/dev/null /bin/ps -ef

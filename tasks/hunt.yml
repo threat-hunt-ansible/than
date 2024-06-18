@@ -1,0 +1,23 @@
+---
+- name: Indicators | Scan
+  ansible.builtin.include_tasks:
+    file: "tasks/hunt/{{ _type }}.yml"
+  loop: "{{ _indicator.type | intersect(_result.indicators) }}"
+  loop_control:
+    loop_var: '_type'
+
+- when:
+    - _indicator_gathered_results is defined
+    - _indicator_gathered_results | length
+  block:
+    - name: Hunt | Process Results
+      ansible.builtin.set_fact:
+        than_host_indicator_findings: "{{ than_host_indicator_findings | d([])
+          + [{'host': inventory_hostname, 'label': _indicator_label, 'indicator': _indicator_indicator, 'metadata': _indicator_metadata, 'findings': _indicator_gathered_results}]
+          }}"
+
+    - name: Hunt | Cleanup
+      ansible.builtin.set_fact:
+        _indicator_gathered_results: {}
+
+...

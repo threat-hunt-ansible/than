@@ -1,0 +1,23 @@
+---
+# Deleted process binaries
+- metadata:
+    label: 'File Deletion: Process Binary'
+    description: 'Detect processes with binaries deleted on disk'
+    subtechniques:
+      - T1070.004
+    techniques:
+      - T1070
+    tactics:
+      - TA0005
+    author: 'Red Hat Information Security'
+    version: '1'
+    date: '2024-04-20'
+  indicators:
+    - content
+    - filename
+  output: direct
+  detection:
+    type: 'shell'
+    executable: '/bin/bash'
+    script: |
+      2>/dev/null ls -la /proc/*/exe | { grep deleted || true; }

@@ -1,0 +1,23 @@
+---
+- name: SHA1 | Scan
+  ansible.builtin.command:
+    cmd: >-
+      sha1sum {{ item }}
+  loop: "{{ _detection_scan_results }}"
+  register: _detection_gather_type_sha1
+  changed_when: false
+
+- name: SHA1 | Process
+  vars:
+    _gathered_key: "{{ item.item }}"
+    _gathered_value: "{{ item.stdout | split(' ') | first }}"
+    _gathered_combine: "{{ {_gathered_key: {'sha1': _gathered_value}} }}"
+  set_fact:
+    _detection_gathered_results: "{{ _detection_gathered_results | d({})
+      | ansible.builtin.combine(_gathered_combine, recursive=true)
+      }}"
+  loop: "{{ _detection_gather_type_sha1.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+...

@@ -1,0 +1,25 @@
+---
+- name: Report | Create host structure
+  ansible.builtin.file:
+    name: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ _reports_host_directory | dirname }}"
+    - "{{ _reports_host_directory }}"
+  delegate_to: localhost
+  become: no
+
+- name: "Report | Generate"
+  ansible.builtin.include_tasks:
+    file: "report/generate_directories_{{ _format }}.yml"
+    apply:
+      vars:
+        __content: "{{ than_host_detections_results | selectattr('metadata.techniques', 'contains', item) }}"
+        __dest: "{{ _reports_host_directory }}"
+        __loop: "{{ than_host_detections_results | map(attribute='metadata') | map(attribute='techniques') | flatten | unique }}"
+  loop: "{{ [than_report_format] | flatten }}"
+  loop_control:
+    loop_var: '_format'
+
+...

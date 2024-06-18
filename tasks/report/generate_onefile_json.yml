@@ -1,0 +1,10 @@
+---
+- name: Generate JSON
+  ansible.builtin.copy:
+    content: "{{ __content | to_json }}"
+    dest: "{{ __dest }}/{{ _reports_onefile_filename }}.json"
+  delegate_to: localhost
+  run_once: yes
+  become: no
+
+...
